@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: college-discovery
+    env: node
+    plan: free
+    repo: ""
+    branch: main
+    buildCommand: "npm run build"
+    startCommand: "node dist/server.cjs"
+    envVars:
+      - key: NODE_ENV
+        value: production
