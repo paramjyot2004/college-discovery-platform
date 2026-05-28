@@ -50,7 +50,8 @@ export function DiscussionsPage({ colleges, onViewDetails }: DiscussionsPageProp
       try {
         const query = new URLSearchParams();
         if (selectedCollegeSlug) query.set("collegeSlug", selectedCollegeSlug);
-        if (search) query.set("search", search);
+        const searchParam = (search || "").trim();
+        if (searchParam) query.set("search", searchParam);
 
         const res = await fetch(`/api/discussions?${query.toString()}`);
         if (!res.ok) {

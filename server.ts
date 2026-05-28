@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { fileURLToPath } from "url";
+import { collegeMatchesSearch } from "./src/utils/search";
 
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
@@ -85,34 +86,39 @@ app.get("/api/health", (req, res) => {
 // 2. Fetch colleges with search and filters
 app.get("/api/colleges", (req, res) => {
   const db = readDB();
-  const search = typeof req.query.search === "string" ? req.query.search.toLowerCase() : "";
+  const search = typeof req.query.search === "string" ? req.query.search : "";
   const location = typeof req.query.location === "string" ? req.query.location : "";
   const minFees = parseInt(req.query.minFees as string) || 0;
   const maxFees = parseInt(req.query.maxFees as string) || 1000000;
   const rating = parseFloat(req.query.rating as string) || 0;
   const type = req.query.type as string; // 'Public' | 'Private' | ''
   const sortBy = req.query.sortBy as string || "rating-desc"; // rating-desc, fees-asc, fees-desc, placements-desc
-
+  // Improved search: case-insensitive, partial, multi-word, initials (e.g. 'cs' -> 'computer science')
   let filtered = db.colleges.filter((c) => {
-    // 1. Search term match name / location / courses
-    const matchesSearch =
-      !search ||
-      c.name.toLowerCase().includes(search) ||
-      c.location.toLowerCase().includes(search) ||
-      c.courses.some((course: string) => course.toLowerCase().includes(search)) ||
-      c.description.toLowerCase().includes(search);
+    // 1. Search matching using reusable utility
+    const matchesSearch = collegeMatchesSearch(
+      {
+        name: c.name,
+        slug: c.slug,
+        location: c.location,
+        state: c.state,
+        description: c.description,
+        courses: c.courses,
+      },
+      search
+    );
 
-    // 2. Location filter
-    const matchesLocation = !location || c.location.toLowerCase().includes(location.toLowerCase());
+    // 2. Location filter (separate explicit location filter if provided)
+    const matchesLocation = !location || (c.location || "").toLowerCase().includes(location.toLowerCase()) || (c.state || "").toLowerCase().includes(location.toLowerCase());
 
     // 3. Fees range
-    const matchesFees = c.fees >= minFees && c.fees <= maxFees;
+    const matchesFees = typeof c.fees === 'number' ? c.fees >= minFees && c.fees <= maxFees : true;
 
     // 4. Min Rating
-    const matchesRating = c.rating >= rating;
+    const matchesRating = typeof c.rating === 'number' ? c.rating >= rating : true;
 
     // 5. College Type (Public/Private)
-    const matchesType = !type || c.type.toLowerCase() === type.toLowerCase();
+    const matchesType = !type || (c.type || "").toLowerCase() === type.toLowerCase();
 
     return matchesSearch && matchesLocation && matchesFees && matchesRating && matchesType;
   });

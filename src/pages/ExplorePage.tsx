@@ -60,7 +60,8 @@ export function ExplorePage({
       setErrorMsg("");
       try {
         const queryParams = new URLSearchParams();
-        if (search) queryParams.set("search", search);
+        const searchParam = (search || "").trim();
+        if (searchParam) queryParams.set("search", searchParam);
         if (selectedLocation) queryParams.set("location", selectedLocation);
         if (feesRange[0] > 0) queryParams.set("minFees", feesRange[0].toString());
         if (feesRange[1] < 1000000) queryParams.set("maxFees", feesRange[1].toString());
