@@ -49,8 +49,9 @@ https://github.com/paramjyot2004/college-discovery-platform
 ✅ Responsive dashboard UI  
 ✅ Authentication system  
 ✅ Pagination and sorting  
+✅ REST API architecture  
+✅ Loading and empty states  
 ✅ Mobile responsive design  
-✅ Deployment-ready architecture  
 
 ---
 
@@ -59,6 +60,19 @@ https://github.com/paramjyot2004/college-discovery-platform
 Students often struggle to compare colleges efficiently across multiple education portals.
 
 Unipedia was built to simplify college discovery through a modern search, filtering, and comparison experience focused on usability, scalability, and performance.
+
+---
+
+# 📸 Screenshots
+
+## 🏠 Explore Page
+(Add screenshot here)
+
+## 🏫 College Detail Page
+(Add screenshot here)
+
+## ⚖️ Compare Colleges
+(Add screenshot here)
 
 ---
 
@@ -76,6 +90,16 @@ Unipedia was built to simplify college discovery through a modern search, filter
 
 ---
 
+# 🏗️ Architecture
+
+The application uses a **React + Vite frontend** with an **Express backend** serving REST APIs.
+
+For development, a lightweight local JSON database is used for fast iteration and sandbox compatibility.
+
+Production-ready Prisma and PostgreSQL configurations are included for deployment using **Neon PostgreSQL** and **Vercel**.
+
+---
+
 # ⚡ Engineering Highlights
 
 - 📦 Scalable folder structure
@@ -84,6 +108,7 @@ Unipedia was built to simplify college discovery through a modern search, filter
 - ⚖️ Side-by-side comparison workflow
 - 📱 Mobile responsive dashboard
 - 🗄️ Prisma ORM integration
+- 🔐 Authentication-protected saved colleges
 - ☁️ Deployment-ready architecture
 
 ---
@@ -92,18 +117,132 @@ Unipedia was built to simplify college discovery through a modern search, filter
 
 ```bash
 ├── prisma/
+│   ├── schema.prisma
+│   ├── seed.ts
+│   └── nextauth-config.ts
+│
 ├── server/
+│   └── db.json
+│
 ├── src/
 │   ├── components/
+│   │   ├── AuthModal.tsx
+│   │   ├── CollegeCard.tsx
+│   │   ├── CompareTable.tsx
+│   │   ├── EmptyState.tsx
+│   │   ├── FilterSidebar.tsx
+│   │   ├── Footer.tsx
+│   │   ├── LoadingSkeleton.tsx
+│   │   ├── Navbar.tsx
+│   │   └── Pagination.tsx
+│   │
 │   ├── context/
+│   │   └── AuthContext.tsx
+│   │
 │   ├── pages/
-│   ├── data/
-│   ├── utils/
-│   └── App.tsx
+│   │   ├── ExplorePage.tsx
+│   │   ├── DetailPage.tsx
+│   │   ├── ComparePage.tsx
+│   │   └── SavedPage.tsx
+│   │
+│   ├── types.ts
+│   ├── App.tsx
+│   ├── index.css
+│   └── main.tsx
+│
+├── index.html
 ├── package.json
-├── tsconfig.json
-└── vite.config.ts
+├── server.ts
+└── tsconfig.json
 ```
+
+---
+
+# 📡 REST API Endpoints
+
+## 🏫 Colleges
+
+### Get all colleges
+
+```http
+GET /api/colleges
+```
+
+### Get college details
+
+```http
+GET /api/colleges/:slug
+```
+
+### Compare colleges
+
+```http
+GET /api/compare?slugs=slug1,slug2
+```
+
+---
+
+## 🔐 Authentication
+
+### Register user
+
+```http
+POST /api/auth/signup
+```
+
+### Login user
+
+```http
+POST /api/auth/login
+```
+
+### Current session
+
+```http
+GET /api/auth/me
+```
+
+---
+
+## ❤️ Saved Colleges
+
+### Fetch saved colleges
+
+```http
+GET /api/saved-colleges
+```
+
+### Save / remove college
+
+```http
+POST /api/saved-colleges/toggle
+```
+
+---
+
+# 🗄️ Database Models
+
+## 👤 User
+- id
+- email
+- password
+- createdAt
+
+## 🏫 College
+- id
+- name
+- slug
+- location
+- fees
+- rating
+- placements
+- courses
+- image
+
+## ❤️ SavedCollege
+- id
+- userId
+- collegeId
 
 ---
 
@@ -112,7 +251,7 @@ Unipedia was built to simplify college discovery through a modern search, filter
 ## 📥 Clone Repository
 
 ```bash
-git clone https://github.com/paramjyot2004/college-discovery-platform.git
+git clone <your-repository-url>
 ```
 
 ## 📦 Install Dependencies
@@ -135,17 +274,47 @@ http://localhost:3000
 
 ---
 
+# 🔑 Environment Variables
+
+Create a `.env` file:
+
+```env
+DATABASE_URL="your-neon-postgres-url"
+NEXTAUTH_SECRET="your-secret"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+---
+
+# 🧬 Prisma Setup
+
+## Push Database Schema
+
+```bash
+npx prisma db push
+```
+
+## Seed Database
+
+```bash
+npx tsx prisma/seed.ts
+```
+
+---
+
 # ☁️ Deployment
 
 ## 🚀 Frontend Deployment
 
-Deployed on Vercel:
+Deploy on Vercel:
 
 https://college-discovery-plat-git-59f900-paramkaur08669-7048s-projects.vercel.app/
 
 ## 🗄️ Database Hosting
 
-Configured using Neon PostgreSQL.
+Use Neon PostgreSQL:
+
+https://neon.tech
 
 ---
 
