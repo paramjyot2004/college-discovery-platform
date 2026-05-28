@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { College } from "../types";
+import { getAllColleges } from "../utils/localData";
 import { CollegeCard } from "../components/CollegeCard";
 import { AlertBanner } from "../components/Feedback";
 import { Heart, Lock, LogIn, Compass, RefreshCw, Server } from "lucide-react";
@@ -29,24 +30,16 @@ export function SavedPage({
   // Fetch fully hydrated saved college objects from backend
   useEffect(() => {
     async function loadSavedColleges() {
-      const token = localStorage.getItem("auth_token");
-      if (!user || !token) return;
-
+      if (!user) return;
       setIsLoading(true);
       setErrorMsg("");
       try {
-        const res = await fetch("/api/saved-colleges", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error("Could not fetch shortlisted details from server.");
-        }
-
-        const data = await res.json();
-        setSavedColleges(data.savedColleges || []);
+        const all = await getAllColleges();
+        const key = `saved_${user.id}`;
+        const raw = localStorage.getItem(key) || "[]";
+        const ids: string[] = JSON.parse(raw);
+        const mapped = all.filter((c) => ids.includes(c.id) || ids.includes(c.slug));
+        setSavedColleges(mapped);
       } catch (err: any) {
         setErrorMsg(getErrorMessage(err, "Failed to load your shortlist right now."));
       } finally {

@@ -12,6 +12,7 @@ import { SavedPage } from "./pages/SavedPage";
 import { PredictorPage } from "./pages/PredictorPage";
 import { DiscussionsPage } from "./pages/DiscussionsPage";
 import { College } from "./types";
+import { getAllColleges } from "./utils/localData";
 import { AlertCircle, Scale, GraduationCap, X } from "lucide-react";
 
 function RootApp() {
@@ -22,18 +23,15 @@ function RootApp() {
   const [allColleges, setAllColleges] = useState<College[]>([]);
 
   React.useEffect(() => {
-    async function loadAllColleges() {
-      try {
-        const res = await fetch("/api/colleges");
-        if (res.ok) {
-          const data = await res.json();
-          setAllColleges(data.colleges || []);
-        }
-      } catch (err) {
-        console.error("Failed to load all colleges:", err);
-      }
-    }
-    loadAllColleges();
+    let mounted = true;
+    getAllColleges()
+      .then((list) => {
+        if (mounted) setAllColleges(list || []);
+      })
+      .catch((err) => console.error("Failed to load all colleges:", err));
+    return () => {
+      mounted = false;
+    };
   }, []);
   
   // Selected detail slug

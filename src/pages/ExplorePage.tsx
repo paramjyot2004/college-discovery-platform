@@ -8,6 +8,7 @@ import { Pagination } from "../components/Pagination";
 import { AlertBanner } from "../components/Feedback";
 import { Search, Loader2, ArrowUpDown, Server, Sparkles, BookOpen, Layers } from "lucide-react";
 import { getErrorMessage } from "../utils/error";
+import { searchColleges } from "../utils/localData";
 
 interface ExplorePageProps {
   onToggleSaved: (id: string) => Promise<void>;
@@ -59,22 +60,16 @@ export function ExplorePage({
       setIsLoading(true);
       setErrorMsg("");
       try {
-        const queryParams = new URLSearchParams();
-        const searchParam = (search || "").trim();
-        if (searchParam) queryParams.set("search", searchParam);
-        if (selectedLocation) queryParams.set("location", selectedLocation);
-        if (feesRange[0] > 0) queryParams.set("minFees", feesRange[0].toString());
-        if (feesRange[1] < 1000000) queryParams.set("maxFees", feesRange[1].toString());
-        if (minRating > 0) queryParams.set("rating", minRating.toString());
-        if (selectedType) queryParams.set("type", selectedType);
-        queryParams.set("sortBy", sortBy);
-
-        const res = await fetch(`/api/colleges?${queryParams.toString()}`);
-        if (!res.ok) {
-          throw new Error("Could not load university profiles");
-        }
-        const data = await res.json();
-        setColleges(data.colleges || []);
+        const data = await searchColleges({
+          search: (search || "").trim(),
+          location: selectedLocation,
+          minFees: feesRange[0],
+          maxFees: feesRange[1],
+          rating: minRating,
+          type: selectedType,
+          sortBy,
+        });
+        setColleges(data || []);
         setCurrentPage(1); // Reset page index on state filter modifications
       } catch (err: any) {
         setErrorMsg(getErrorMessage(err, "Failed to load college listings. Please try again."));

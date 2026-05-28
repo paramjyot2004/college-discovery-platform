@@ -4,6 +4,7 @@ import { College, DiscussionThread } from "../types";
 import { AlertBanner } from "../components/Feedback";
 import { MessageSquare, PlusCircle, Send, Search, BookOpen, Clock3, UserCircle2, ArrowRight, Sparkles } from "lucide-react";
 import { getErrorMessage } from "../utils/error";
+import { loadDiscussions, saveDiscussions } from "../utils/localData";
 
 interface DiscussionsPageProps {
   colleges: College[];
@@ -44,29 +45,22 @@ export function DiscussionsPage({ colleges, onViewDetails }: DiscussionsPageProp
   }, [colleges, selectedCollegeSlug]);
 
   useEffect(() => {
-    async function loadDiscussions() {
-      setIsLoading(true);
-      setErrorMsg("");
-      try {
-        const query = new URLSearchParams();
-        if (selectedCollegeSlug) query.set("collegeSlug", selectedCollegeSlug);
-        const searchParam = (search || "").trim();
-        if (searchParam) query.set("search", searchParam);
-
-        const res = await fetch(`/api/discussions?${query.toString()}`);
-        if (!res.ok) {
-          throw new Error("Could not load discussions right now.");
-        }
-        const data = await res.json();
-        setThreads(data.discussions || []);
-      } catch (err: any) {
-        setErrorMsg(getErrorMessage(err, "Failed to load the discussion feed."));
-      } finally {
-        setIsLoading(false);
-      }
+    setIsLoading(true);
+    setErrorMsg("");
+    try {
+      const all = loadDiscussions();
+      const filtered = all.filter((t) => {
+        const matchesCollege = !selectedCollegeSlug || t.collegeSlug === selectedCollegeSlug;
+        const q = (search || "").trim().toLowerCase();
+        const matchesSearch = !q || t.title.toLowerCase().includes(q) || t.body.toLowerCase().includes(q) || t.author.toLowerCase().includes(q);
+        return matchesCollege && matchesSearch;
+      });
+      setThreads(filtered);
+    } catch (err: any) {
+      setErrorMsg(getErrorMessage(err, "Failed to load the discussion feed."));
+    } finally {
+      setIsLoading(false);
     }
-
-    loadDiscussions();
   }, [selectedCollegeSlug, search]);
 
   const selectedCollege = colleges.find((college) => college.slug === selectedCollegeSlug);
@@ -75,30 +69,28 @@ export function DiscussionsPage({ colleges, onViewDetails }: DiscussionsPageProp
   const handleCreateQuestion = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!newQuestionTitle.trim() || !newQuestionBody.trim() || !selectedCollege) return;
-
     setIsSubmittingQuestion(true);
     setErrorMsg("");
     try {
-      const res = await fetch("/api/discussions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newQuestionTitle.trim(),
-          body: newQuestionBody.trim(),
-          collegeSlug: selectedCollege.slug,
-          collegeName: selectedCollege.name,
-          author: newQuestionAuthor.trim() || user?.email || "Anonymous",
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Could not post the question.");
-      }
-
+      const all = loadDiscussions();
+      const id = `t_${Date.now()}`;
+      const newThread: DiscussionThread = {
+        id,
+        collegeSlug: selectedCollege.slug,
+        collegeName: selectedCollege.name,
+        title: newQuestionTitle.trim(),
+        body: newQuestionBody.trim(),
+        author: newQuestionAuthor.trim() || user?.email || "Anonymous",
+        createdAt: new Date().toISOString(),
+        answers: [],
+      };
+      const updated = [newThread, ...all];
+      saveDiscussions(updated);
       setNewQuestionTitle("");
       setNewQuestionBody("");
-      await refreshThreads();
+      // Refresh local view
+      const filtered = updated.filter((t) => t.collegeSlug === selectedCollege.slug);
+      setThreads(filtered);
     } catch (err: any) {
       setErrorMsg(getErrorMessage(err, "Failed to create the question."));
     } finally {
@@ -107,36 +99,29 @@ export function DiscussionsPage({ colleges, onViewDetails }: DiscussionsPageProp
   };
 
   async function refreshThreads() {
-    const query = new URLSearchParams();
-    if (selectedCollegeSlug) query.set("collegeSlug", selectedCollegeSlug);
-    if (search) query.set("search", search);
-
-    const res = await fetch(`/api/discussions?${query.toString()}`);
-    const data = await res.json();
-    setThreads(data.discussions || []);
+    const all = loadDiscussions();
+    const filtered = all.filter((t) => !selectedCollegeSlug || t.collegeSlug === selectedCollegeSlug);
+    setThreads(filtered);
   }
 
   const handleAnswer = async (threadId: string) => {
     const body = answerDrafts[threadId]?.trim();
     if (!body) return;
-
     try {
-      const res = await fetch(`/api/discussions/${threadId}/answers`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          body,
-          author: user?.email || newQuestionAuthor.trim() || "Anonymous",
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Could not submit answer.");
-      }
-
+      const all = loadDiscussions();
+      const idx = all.findIndex((t) => t.id === threadId);
+      if (idx === -1) return;
+      const answer = {
+        id: `a_${Date.now()}`,
+        body,
+        author: user?.email || newQuestionAuthor.trim() || "Anonymous",
+        createdAt: new Date().toISOString(),
+      } as any;
+      all[idx].answers.push(answer);
+      saveDiscussions(all);
       setAnswerDrafts((current) => ({ ...current, [threadId]: "" }));
-      await refreshThreads();
+      const filtered = all.filter((t) => !selectedCollegeSlug || t.collegeSlug === selectedCollegeSlug);
+      setThreads(filtered);
     } catch (err: any) {
       setErrorMsg(getErrorMessage(err, "Failed to post the answer."));
     }

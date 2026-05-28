@@ -19,23 +19,25 @@ export function DetailPage({ slug, onBack, onToggleSaved, savedIds }: DetailPage
   const [activeTab, setActiveTab] = useState<"overview" | "courses" | "placements" | "reviews">("overview");
 
   useEffect(() => {
-    async function loadCollegeDetails() {
-      setIsLoading(true);
-      setErrorMsg("");
-      try {
-        const res = await fetch(`/api/colleges/${slug}`);
-        if (!res.ok) {
-          throw new Error("We could not load this college profile right now.");
-        }
-        const data = await res.json();
-        setCollege(data.college || null);
-      } catch (err: any) {
-        setErrorMsg(getErrorMessage(err, "Failed to load the college profile."));
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadCollegeDetails();
+    let mounted = true;
+    setIsLoading(true);
+    setErrorMsg("");
+    import("../utils/localData").then(({ getCollegeBySlug }) => {
+      getCollegeBySlug(slug)
+        .then((c) => {
+          if (!mounted) return;
+          setCollege(c);
+          if (!c) setErrorMsg("College not found");
+        })
+        .catch((err: any) => {
+          if (!mounted) return;
+          setErrorMsg(getErrorMessage(err, "Failed to load the college profile."));
+        })
+        .finally(() => mounted && setIsLoading(false));
+    });
+    return () => {
+      mounted = false;
+    };
   }, [slug]);
 
   if (isLoading) {
