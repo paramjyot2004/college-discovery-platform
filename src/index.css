@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@layer base {
+	:root {
+		color-scheme: light;
+	}
+
+	html {
+		scroll-behavior: smooth;
+	}
+
+	body {
+		background:
+			radial-gradient(circle at top, rgba(59, 130, 246, 0.06), transparent 30%),
+			linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+		color: rgb(51 65 85);
+		font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+		text-rendering: optimizeLegibility;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+
+	::selection {
+		background: rgba(59, 130, 246, 0.16);
+		color: rgb(15 23 42);
+	}
+
+	button,
+	select,
+	input,
+	textarea {
+		font: inherit;
+	}
+}
+
+@layer utilities {
+	.surface-panel {
+		@apply rounded-xl border border-slate-200 bg-white shadow-sm;
+	}
+
+	.surface-panel-muted {
+		@apply rounded-xl border border-slate-200/80 bg-white/90 shadow-sm;
+	}
+
+	.soft-divider {
+		@apply border-slate-200/70;
+	}
+}

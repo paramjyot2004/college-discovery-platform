@@ -1,0 +1,53 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String         // Hashed password
+  createdAt     DateTime       @default(now())
+  savedColleges SavedCollege[]
+
+  @@map("users")
+}
+
+model College {
+  id               String         @id
+  name             String
+  slug             String         @unique
+  location         String
+  fees             Int            // Annual fees in INR
+  rating           Float          // Rating out of 5
+  placements       String         // Average package, e.g. "31.2 LPA"
+  highestPlacement String?        // Optional peak package
+  image            String         // Banner asset url
+  description      String         @db.Text
+  courses          String[]       // Array of offered courses
+  established      Int            // Year of establishment
+  type             String         // "Public" or "Private"
+  campusSize       String?        // e.g., "300 Acres"
+  reviewsCount     Int            @default(0)
+  savedBy          SavedCollege[]
+
+  @@map("colleges")
+}
+
+model SavedCollege {
+  id        String   @id @default(uuid())
+  userId    String
+  collegeId String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId])
+  @@map("saved_colleges")
+}
