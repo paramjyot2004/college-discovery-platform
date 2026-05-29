@@ -33,7 +33,7 @@ Built as a production-focused internship MVP emphasizing:
 # 🌐 Live Demo
 
 ## 🚀 Live URL
-https://college-discovery-plat-git-59f900-paramkaur08669-7048s-projects.vercel.app/
+https://college-discovery-platform-zeta-beryl.vercel.app/
 
 ## 📂 GitHub Repository
 https://github.com/paramjyot2004/college-discovery-platform
@@ -66,14 +66,22 @@ Unipedia was built to simplify college discovery through a modern search, filter
 # 📸 Screenshots
 
 ## 🏠 Explore Page
-(Add screenshot here)
+
+<img width="100%" alt="Explore Page" src="./screenshots/explore.png" />
+
+---
 
 ## 🏫 College Detail Page
-(Add screenshot here)
+
+<img width="100%" alt="College Detail Page" src="./screenshots/detail.png" />
+
+---
 
 ## ⚖️ Compare Colleges
-(Add screenshot here)
 
+<img width="100%" alt="Compare Colleges" src="./screenshots/compare.png" />
+
+---
 ---
 
 # 🛠️ Tech Stack
